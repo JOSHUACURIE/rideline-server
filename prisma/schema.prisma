@@ -1,0 +1,359 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+enum UserRole {
+  ADMIN
+}
+
+enum BusType {
+  STANDARD
+  EXECUTIVE
+  LUXURY
+  VIP
+}
+
+enum SeatType {
+  REGULAR
+  VIP
+  ACCESSIBLE
+}
+
+enum JourneyStatus {
+  SCHEDULED
+  BOARDING
+  DEPARTED
+  COMPLETED
+  CANCELLED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  EXPIRED
+  CANCELLED
+  REFUNDED
+}
+
+enum JourneySeatStatus {
+  AVAILABLE
+  HELD
+  BOOKED
+}
+
+enum PaymentStatus {
+  INITIATED
+  PENDING
+  SUCCESSFUL
+  FAILED
+  CANCELLED
+}
+
+enum TicketStatus {
+  VALID
+  USED
+  CANCELLED
+}
+
+enum RefundStatus {
+  REQUESTED
+  PROCESSING
+  COMPLETED
+  REJECTED
+}
+
+enum ComplaintStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  firstName    String
+  secondName   String
+  email        String   @unique
+  phone        String?
+  passwordHash String
+  role         UserRole @default(ADMIN)
+  isActive     Boolean  @default(true)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("users")
+}
+
+
+
+model Bus {
+  id                 String   @id @default(uuid()) @db.Uuid
+  registrationNumber String   @unique
+  name               String?
+  busType            BusType  @default(STANDARD)
+  totalSeats         Int
+  amenities          String[]
+  isActive           Boolean  @default(true)
+
+  seats              Seat[]
+  journeys           Journey[]
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("buses")
+}
+
+model Route {
+  id                       String   @id @default(uuid()) @db.Uuid
+  origin                   String
+  destination              String
+  distanceKm               Float?
+  estimatedDurationMinutes Int?
+  isActive                 Boolean  @default(true)
+
+  journeys                 Journey[]
+
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  @@unique([origin, destination])
+  @@index([origin])
+  @@index([destination])
+
+  @@map("routes")
+}
+
+
+
+model Seat {
+  id           String   @id @default(uuid()) @db.Uuid
+  busId        String   @db.Uuid
+  seatNumber   String
+  seatType     SeatType @default(REGULAR)
+  isActive     Boolean  @default(true)
+
+  bus          Bus          @relation(fields: [busId], references: [id])
+  journeySeats JourneySeat[]
+
+  createdAt    DateTime @default(now())
+
+  @@unique([busId, seatNumber])
+  @@index([busId])
+
+  @@map("seats")
+}
+
+
+
+model Journey {
+  id              String        @id @default(uuid()) @db.Uuid
+  routeId         String        @db.Uuid
+  busId           String        @db.Uuid
+
+  departureAt     DateTime
+  arrivalAt       DateTime
+
+  fareAmountMinor Int
+  currency        String        @default("KES")
+
+  status          JourneyStatus @default(SCHEDULED)
+
+  route           Route         @relation(fields: [routeId], references: [id])
+  bus             Bus           @relation(fields: [busId], references: [id])
+
+  bookings        Booking[]
+  journeySeats    JourneySeat[]
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([routeId, departureAt])
+  @@index([busId, departureAt])
+  @@index([status, departureAt])
+
+  @@map("journeys")
+}
+
+
+
+model JourneySeat {
+  id            String            @id @default(uuid()) @db.Uuid
+  journeyId     String            @db.Uuid
+  seatId        String            @db.Uuid
+
+  status        JourneySeatStatus @default(AVAILABLE)
+
+  holdExpiresAt DateTime?
+  bookingId     String?           @db.Uuid
+
+  journey       Journey           @relation(fields: [journeyId], references: [id])
+  seat          Seat              @relation(fields: [seatId], references: [id])
+  booking       Booking?          @relation(fields: [bookingId], references: [id])
+
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@unique([journeyId, seatId])
+  @@index([journeyId, status])
+  @@index([bookingId])
+
+  @@map("journey_seats")
+}
+
+
+
+
+model Booking {
+  id                  String        @id @default(uuid()) @db.Uuid
+  bookingReference    String        @unique
+
+  journeyId           String        @db.Uuid
+
+  passengerFirstName  String
+  passengerSecondName String
+  passengerPhone      String
+  passengerEmail      String?
+
+  seatNumbers         String[]
+
+  totalAmountMinor    Int
+  currency            String        @default("KES")
+
+  status              BookingStatus @default(PENDING)
+
+  expiresAt           DateTime?
+  confirmedAt         DateTime?
+
+  journey             Journey       @relation(fields: [journeyId], references: [id])
+
+  journeySeats        JourneySeat[]
+  payments            Payment[]
+  ticket              Ticket?
+  refunds             Refund[]
+  complaints          Complaint[]
+
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  @@index([journeyId, status])
+  @@index([passengerPhone])
+  @@index([createdAt])
+
+  @@map("bookings")
+}
+
+
+model Payment {
+  id                String        @id @default(uuid()) @db.Uuid
+  bookingId         String        @db.Uuid
+
+  provider          String
+  providerReference String?
+  idempotencyKey    String        @unique
+
+  amountMinor       Int
+  currency          String        @default("KES")
+
+  status            PaymentStatus @default(INITIATED)
+
+  paidAt            DateTime?
+  failureReason     String?
+
+  booking           Booking       @relation(fields: [bookingId], references: [id])
+  refunds           Refund[]
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([bookingId])
+  @@index([providerReference])
+  @@index([status])
+
+  @@map("payments")
+}
+
+
+
+model Ticket {
+  id           String       @id @default(uuid()) @db.Uuid
+  bookingId    String       @unique @db.Uuid
+
+  ticketNumber String       @unique
+  qrCodeToken  String       @unique
+
+  status       TicketStatus @default(VALID)
+  issuedAt     DateTime     @default(now())
+  usedAt       DateTime?
+
+  booking      Booking      @relation(fields: [bookingId], references: [id])
+
+  createdAt    DateTime     @default(now())
+
+  @@map("tickets")
+}
+
+
+model Refund {
+  id          String       @id @default(uuid()) @db.Uuid
+  bookingId   String       @db.Uuid
+  paymentId   String       @db.Uuid
+
+  amountMinor Int
+  currency    String       @default("KES")
+
+  reason      String?
+  status      RefundStatus @default(REQUESTED)
+
+  requestedAt DateTime     @default(now())
+  processedAt DateTime?
+
+  booking     Booking      @relation(fields: [bookingId], references: [id])
+  payment     Payment      @relation(fields: [paymentId], references: [id])
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([bookingId])
+  @@index([paymentId])
+  @@index([status])
+
+  @@map("refunds")
+}
+
+
+
+model Complaint {
+  id           String          @id @default(uuid()) @db.Uuid
+  bookingId    String?         @db.Uuid
+
+  subject      String
+  message      String
+
+  contactName  String?
+  contactPhone String?
+  contactEmail String?
+
+  status       ComplaintStatus @default(OPEN)
+  resolution   String?
+
+  booking      Booking?        @relation(fields: [bookingId], references: [id])
+
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([bookingId])
+  @@index([status])
+  @@index([createdAt])
+
+  @@map("complains")
+}
