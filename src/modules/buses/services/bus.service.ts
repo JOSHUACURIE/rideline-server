@@ -1,0 +1,28 @@
+import da from "zod/v4/locales/da.js";
+import prisma from "../../../config/database";
+import { CreateBusDTO } from "../../../dto/create-bus";
+
+export const createBus=async(data:CreateBusDTO)=>{
+    const existingBus=await prisma.bus.findUnique({
+        where:{
+            registrationNumber:data.registrationNumber
+        }
+    });
+
+    if(existingBus){
+        throw new Error("Bus already exists")
+    }
+
+
+    const bus=await prisma.bus.create({
+        data:{
+            registrationNumber:data.registrationNumber,
+            name:data.name,
+            busType:data.busType,
+            totalSeats:data.totalSeats,
+            amenities:data.amenities
+        }
+    });
+
+    return bus;
+}
