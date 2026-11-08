@@ -16,3 +16,5 @@ export const createBusSchema = z.object({
 
   amenities: z.array(z.string())
 });
+
+export type CreateBusDTO = z.infer<typeof createBusSchema>;

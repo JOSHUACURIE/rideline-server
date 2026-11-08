@@ -26,3 +26,17 @@ export const createBus=async(data:CreateBusDTO)=>{
 
     return bus;
 }
+
+export const getAllBuses=async()=>{
+    const bus=await prisma.bus.findMany({
+        select:{
+            id:true,
+            registrationNumber:true,
+            busType:true,
+            totalSeats:true,
+            amenities:true
+        }
+    })
+
+    return bus;
+}
