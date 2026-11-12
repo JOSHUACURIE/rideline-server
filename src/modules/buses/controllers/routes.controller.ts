@@ -9,7 +9,7 @@ export const createRoute=async(req:Request,res:Response,next:NextFunction)=>{
 const routesData:CreateRouteDto=req.body;
 
 const routes=await routesService.createRoute(routesData);
-return res.status(200).json({
+return res.status(201).json({
 success:true,
 message:"Route added sucesfully",
 data:routes

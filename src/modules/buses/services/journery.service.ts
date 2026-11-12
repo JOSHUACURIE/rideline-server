@@ -1,7 +1,6 @@
 import { CreateJourneyDTO } from "../../../dto/journey-dto";
 import prisma from "../../../config/database";
-import { JourneyResponse } from "../../../dto/journey-dto";
-import { da } from "zod/locales";
+
 
 export const CreateJourney=async(data:CreateJourneyDTO)=>{
 const journey=await prisma.journey.create({
@@ -73,3 +72,4 @@ export const getJourneyById=async(journeyId:string)=>{
 
     return journey;
 }
+
