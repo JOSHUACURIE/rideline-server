@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { email, z } from "zod";
 
 export const createBusSchema = z.object({
   registrationNumber: z.string().min(2).max(20),
@@ -18,3 +18,5 @@ export const createBusSchema = z.object({
 });
 
 export type CreateBusDTO = z.infer<typeof createBusSchema>;
+
+

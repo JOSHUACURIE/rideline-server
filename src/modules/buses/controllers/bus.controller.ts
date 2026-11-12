@@ -1,12 +1,14 @@
 import { Request,Response,NextFunction } from "express";
 import { CreateBusDTO } from "../../../dto/create-bus";
 import * as busService from '../services/bus.service';import { success } from "zod";
-import ne from "zod/v4/locales/ne.js";
-;
+
+
 
 export const createBusController=async(req:Request,res:Response,next:NextFunction)=>{
+       console.log(req.body)
     try {
         const busData:CreateBusDTO=req.body;
+        
 
         const bus= await busService.createBus(busData);
 
@@ -29,9 +31,25 @@ console.log("Buses fetched successfully")
 return res.status(200).json({
     success:true,
     message:"buses fetched successfully",
-    busData
+    data:busData
 })
 
+    } catch (error) {
+        next(error)
+    }
+}
+
+
+export const getBusById=async(req:Request,res:Response,next:NextFunction)=>{
+    try {
+        const busId=req.params.id;
+
+        const bus= await busService.getBusById(busId as any);
+        return res.status(200).json({
+            success:true,
+            message:"bus fetched successfully",
+            data:bus
+        })
     } catch (error) {
         next(error)
     }

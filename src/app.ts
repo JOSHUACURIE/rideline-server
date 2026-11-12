@@ -2,6 +2,8 @@
 import express from "express";
 import cors from 'cors';
 import busRoutes from './modules/buses/routes/bus.routes'
+import routesRoutes from './modules/buses/routes/routes.routes';
+import seatRoutes from './modules/buses/routes/seat.routes';
 
 
 
@@ -20,8 +22,8 @@ app.get("/health", (req, res) => {
 
 
 app.use("/api/v1/buses", busRoutes);
-
-
+app.use("/api/v1/routes",routesRoutes);
+app.use("/api/v1/seats",seatRoutes)
 app.use((req, res) => {
   res.status(404).json({
     success: false,
