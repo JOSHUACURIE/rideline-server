@@ -5,9 +5,9 @@ const router=Router();
 import * as ctrl from '../controllers/seat.controller';
 
 router.post("/create/single",validate(BulkCreateSeatsSchema),ctrl.createSeat);
-router.post("/create/bulk",validate(CreateSeatSchema),ctrl.bulkCreateSeats);
+router.post("/create/bulk",validate(BulkCreateSeatsSchema),ctrl.bulkCreateSeats);
 router.get("/:id",ctrl.getSeatById);
-router.get("/all",ctrl.getAllSeats);
+router.get("/",ctrl.getAllSeats);
 router.get("/:busId",ctrl.getSeatsByBusId);
 
 

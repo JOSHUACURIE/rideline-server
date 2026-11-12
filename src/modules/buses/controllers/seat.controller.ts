@@ -1,5 +1,5 @@
 import { Request,Response,NextFunction } from "express";
-import { CreateSeatDto } from "../../../dto/create-seat";
+import { CreateSeatDto,BulkCreateSeatsDto } from "../../../dto/create-seat";
 import * as seatService from '../services/seat'
 import { success } from "zod";
 
@@ -22,7 +22,7 @@ export const createSeat=async(req:Request,res:Response,next:NextFunction)=>{
 }
 export const bulkCreateSeats=async(req:Request,res:Response,next:NextFunction)=>{
     try {
-        const seats:CreateSeatDto=req.body;
+        const seats:BulkCreateSeatsDto=req.body;
 
         const seatData=await seatService.bulkCreateSeats(seats);
         return res.status(201).json({

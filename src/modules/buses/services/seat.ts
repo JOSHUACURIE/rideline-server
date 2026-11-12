@@ -115,7 +115,8 @@ export const getAllSeats=async()=>{
                 }
             }
         }
-    })
+    });
+    return seats;
 }
 
 export const getSeatById=async(seatId:string,busId:string)=>{
